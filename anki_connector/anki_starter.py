@@ -5,19 +5,17 @@ import time
 import requests
 
 
-ANKI_CONNECT_URL = "http://127.0.0.1:8765"
-
-
 class AnkiStarter:
-    def __init__(self):
+    def __init__(self, anki_connect_url: str):
+        self._anki_connect_url = anki_connect_url
         self._anki_process = None
 
     @staticmethod
-    def is_anki_connect_available(timeout=2):
+    def is_anki_connect_available(anki_connect_url: str, timeout=2):
         payload = {"action": "version", "version": 6}
 
         try:
-            response = requests.post(ANKI_CONNECT_URL, json=payload, timeout=timeout)
+            response = requests.post(anki_connect_url, json=payload, timeout=timeout)
             response.raise_for_status()
             return response.json().get("error") is None
         except (requests.RequestException, ValueError):
@@ -35,7 +33,7 @@ class AnkiStarter:
 
         deadline = time.monotonic() + startup_timeout
         while time.monotonic() < deadline:
-            if self.is_anki_connect_available():
+            if self.is_anki_connect_available(self._anki_connect_url):
                 self._minimize_window(self._anki_process.pid)
                 return
             if self._anki_process.poll() is not None:
